@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TRPG RPG Core의 AI 게임 마스터가 입력을 받아 자료를 고르고, 상태 변경을 제안하는 과정을 체험합니다.">
+  <meta name="theme-color" content="#f4f7f5">
+  <title>TRPG RPG Core · AI GM 견본</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./demo.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">TR</span>
+        <strong>TRPG RPG Core</strong>
+      </div>
+      <a class="source-link" href="https://github.com/tassada00-web/trpg-ai-demo">GitHub 저장소</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <h1 id="page-title">AI 게임 마스터 견본</h1>
+          <p>예시 턴을 따라가며 AI에 어떤 자료가 전달되고, 제안된 변경이 게임에 어떻게 반영되는지 확인하세요.</p>
+        </div>
+        <div class="intro-scene">
+          <span>예시 시나리오</span>
+          <strong>안개 속 검문소</strong>
+          <p>준비된 응답으로 시연합니다.</p>
+        </div>
+      </section>
+
+      <noscript><p class="noscript">예시 턴을 재생하려면 브라우저에서 JavaScript를 켜주세요.</p></noscript>
+      <section class="workbench" aria-label="TRPG 견본">
+        <div class="toolbar">
+          <nav class="main-mode-switcher" aria-label="견본 화면">
+            <button type="button" data-view="story" aria-pressed="true" aria-controls="story">스토리</button>
+            <button type="button" data-view="explore" aria-pressed="false" aria-controls="explore">탐험보드</button>
+            <button type="button" data-view="combat" aria-pressed="false" aria-controls="combat">전투보드</button>
+            <button type="button" data-view="profile" aria-pressed="false" aria-controls="profile">상태창</button>
+          </nav>
+          <button type="button" class="ghost-button" id="reset" disabled>처음부터</button>
+        </div>
+
+        <div class="layout-grid">
+          <aside class="party-panel" aria-label="캐릭터와 진행 기록">
+            <section class="panel hero-card" aria-labelledby="hero-name">
+              <div class="hero-body">
+                <div class="hero-ident">
+                  <span class="hero-sigil" aria-hidden="true">연</span>
+                  <div><h2 id="hero-name">하연</h2><p>플레이어 · 정찰병</p></div>
+                </div>
+                <div class="resource-stack">
+                  <div class="resource-line">
+                    <label for="hp-meter">HP <strong data-hp>18 / 20</strong></label>
+                    <meter id="hp-meter" min="0" max="20" value="18">18 / 20</meter>
+                  </div>
+                  <div class="resource-line">
+                    <label for="sp-meter">SP <strong>7 / 10</strong></label>
+                    <meter id="sp-meter" min="0" max="10" value="7">7 / 10</meter>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="panel log-panel" aria-labelledby="log-title">
+              <h2 id="log-title">진행 기록</h2>
+              <ul id="log"><li>검문소 북문에 도착했다.</li></ul>
+            </section>
+          </aside>
+
+          <div class="play-panel">
+            <section id="story" class="panel" aria-labelledby="story-title">
+              <header class="panel-head">
+                <h2 id="story-title">이야기 서술</h2>
+                <span class="scene-tag">19:40 · 북문</span>
+              </header>
+              <div class="narrator-messages">
+                <article class="narrator-message">
+                  <h3>현재 장면</h3>
+                  <p>안개가 검문소 북문을 덮었다. 보초가 등불을 든 채 길을 막고 있고, 문 옆에는 예전에 쓰던 종이 줄에 매달려 있다.</p>
+                </article>
+                <article class="narrator-message user" id="player-message" hidden>
+                  <h3>하연</h3>
+                  <p data-action-text></p>
+                </article>
+                <article class="narrator-message" id="gm-message" hidden>
+                  <h3>AI 게임 마스터 <span>예시 응답</span></h3>
+                  <p>종이 세 번 울리자 보초가 등불을 돌리고 빗장을 푼다. 열린 샛문으로 몸을 밀어 넣는 순간, 휘어진 쇠고리가 팔을 스친다. 하연은 문 안쪽 그늘에 이르러 소매 아래 번지는 피를 발견한다.</p>
+                </article>
+              </div>
+              <div class="story-action" id="input-area">
+                <div id="sample-action">
+                  <p class="field-label">예시 행동</p>
+                  <p data-action-text>지난번 들은 신호대로 종을 세 번 울리고, 보초가 길을 열면 안쪽으로 들어간다.</p>
+                </div>
+                <button type="button" class="solid-button" id="submit-action" aria-describedby="sample-action">예시 행동 보내기</button>
+              </div>
+              <div class="story-action" id="request-area" hidden>
+                <p>선택한 자료를 확인하고 AI의 예시 응답을 열어보세요.</p>
+                <button type="button" class="solid-button" id="show-reply">AI 서술 보기</button>
+              </div>
+              <div class="proposal" id="proposal" hidden>
+                <div>
+                  <p class="field-label" id="proposal-label">상태 변경 제안 · 승인 대기</p>
+                  <h3>하연 HP <span>18 → 15</span></h3>
+                  <p id="proposal-note">쇠고리에 긁혀 HP 3 감소</p>
+                </div>
+                <div class="proposal-actions" id="proposal-actions">
+                  <button type="button" class="ghost-button" id="reject">거절</button>
+                  <button type="button" class="solid-button" id="approve">승인 및 적용</button>
+                </div>
+              </div>
+            </section>
+
+            <section id="explore" class="panel" aria-labelledby="explore-title" hidden>
+              <header class="panel-head"><h2 id="explore-title">파티 탐험 보드</h2><span class="scene-tag">검문소 북문</span></header>
+              <div class="board-body">
+                <div class="board-map" data-board="explore" aria-hidden="true"></div>
+                <p class="board-caption">하연 C4 · 보초 E4 · 신호용 종 E3</p>
+                <p>이 예시 턴에는 탐험 참조가 켜져 있어 서버가 보드의 인물과 물체를 AI 요청에 포함합니다.</p>
+              </div>
+            </section>
+
+            <section id="combat" class="panel" aria-labelledby="combat-title" hidden>
+              <header class="panel-head"><h2 id="combat-title">전투 보드</h2><span class="scene-tag">유닛 상태</span></header>
+              <div class="board-body">
+                <div class="board-map" data-board="combat" aria-hidden="true"></div>
+                <p class="board-caption">하연 C4 · HP <strong data-hp>18 / 20</strong></p>
+                <p>하연의 HP가 바뀌면 전투보드의 유닛 정보에도 같은 값이 표시됩니다.</p>
+              </div>
+            </section>
+
+            <section id="profile" class="panel" aria-labelledby="profile-title" hidden>
+              <header class="panel-head"><h2 id="profile-title">캐릭터 상태창</h2><span class="scene-tag">하연</span></header>
+              <dl class="profile-list">
+                <div><dt>직업</dt><dd>정찰병</dd></div>
+                <div><dt>HP</dt><dd data-hp>18 / 20</dd></div>
+                <div><dt>SP</dt><dd>7 / 10</dd></div>
+                <div><dt>소지품</dt><dd>휴대용 등불, 붕대</dd></div>
+              </dl>
+            </section>
+          </div>
+
+          <aside class="panel sheet-panel" aria-labelledby="flow-title">
+            <header class="panel-head"><h2 id="flow-title">AI 처리 흐름</h2></header>
+            <ol class="flow-list">
+              <li data-step aria-current="step"><strong>행동 입력</strong><span>플레이어가 행동이나 대사를 보냅니다.</span></li>
+              <li data-step><strong>자료 선택</strong><span>현재 상태와 관련 설정·기억을 모읍니다.</span></li>
+              <li data-step><strong>AI 서술</strong><span>받은 자료로 장면을 서술하고 변경을 제안합니다.</span></li>
+              <li data-step><strong>승인·반영</strong><span>사용자가 승인하면 게임 상태에 적용합니다.</span></li>
+            </ol>
+            <section class="context" aria-labelledby="context-title">
+              <h3 id="context-title">이번 요청에 전달한 자료</h3>
+              <p id="context-empty">예시 행동을 보내면 이곳에서 자료를 확인할 수 있습니다.</p>
+              <div id="context-data" hidden>
+                <details open>
+                  <summary>캐릭터 상태</summary>
+                  <p>하연 · 정찰병 · 턴 시작 시 HP 18 / 20, SP 7 / 10</p>
+                </details>
+                <details open>
+                  <summary>탐험보드</summary>
+                  <p>북문에서 하연은 C4, 보초는 E4에 있다. 문 옆 E3에는 종이 있다.</p>
+                </details>
+                <details>
+                  <summary>장소 설정</summary>
+                  <p>오래된 북문에는 낮은 샛문이 있다. 안쪽으로 휜 쇠고리가 통로에 걸쳐 있다.</p>
+                </details>
+                <details>
+                  <summary>과거 기억</summary>
+                  <p>이전 턴에서 안내인이 “종을 세 번 울리면 보초가 샛문을 열어줘”라고 알려줬다.</p>
+                </details>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+      <p class="sr-only" id="announcement" role="status"></p>
+    </main>
+  </div>
+</body>
+</html>
