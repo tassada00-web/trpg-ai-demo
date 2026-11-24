@@ -1,4 +1,7 @@
 .demo-narrator-title { flex: 0 0 7.25rem; }
+.narrator-head-actions { flex-wrap: wrap; gap: 6px; }
+.narrator-head-actions > * { flex-shrink: 0; white-space: nowrap; }
+.narrator-head-actions > .ghost-button { padding-inline: 8px; font-size: .82rem; }
 .demo-reference { display: inline-grid; place-items: center; text-align: center; }
 .demo-settings-copy { padding: 9px 15px; font-size: .85rem; }
 .demo-context { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -22,10 +25,6 @@
 button:disabled { opacity: .65; cursor: default; }
 :focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
 .save-tools-panel p + a { display: inline-block; margin-top: 8px; }
-
-@media (max-width: 1650px) {
-  .narrator-head-actions { flex-wrap: wrap; gap: 6px; }
-}
 
 @media (max-width: 680px) {
   .narrator-head { flex-wrap: wrap; padding: 12px; }
