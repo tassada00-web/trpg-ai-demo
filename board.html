@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRPG 전술 보드 견본</title>
+  <link rel="stylesheet" href="./board.css?v=2">
+  <style>
+    .demo-board-note { margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: var(--muted); }
+    .demo-unit-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+    .demo-unit-tools button[aria-pressed="true"] { outline: 2px solid var(--accent); }
+    .unit-disposition-drop button:disabled { opacity: .75; cursor: default; }
+    @media (max-width: 640px) {
+      .exploration-app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
+      .exploration-toolbar { flex-wrap: wrap; }
+      .exploration-board { --explore-cell: min(34px, calc((100vw - 52px) / var(--explore-cols))); }
+      .app { grid-template-rows: minmax(0, 1fr) auto; }
+      .board-wrap { padding: 5px; }
+      .unit-disposition-zones { gap: 5px; }
+      .unit-disposition-drop { padding: 4px; }
+      .unit-disposition-drop button { padding-inline: 3px; font-size: 12px; }
+      .unit-disposition-drop small { display: none; }
+    }
+  </style>
+  <script src="./board.js?v=2" defer></script>
+</head>
+<body>
+  <main id="explorationApp" class="exploration-app app-view" aria-label="탐험 보드" hidden>
+    <section class="exploration-toolbar">
+      <header class="mode-head"><span>탐험 보드</span><strong>모험 진행판</strong></header>
+      <div class="exploration-actions inline-actions">
+        <button id="toggle-fog" type="button" aria-pressed="false">전체 안개 켜기</button>
+      </div>
+    </section>
+    <section class="exploration-board-wrap" aria-label="탐험 진행판">
+      <div id="explorationBoard" class="exploration-board" aria-hidden="true"></div>
+    </section>
+    <aside class="exploration-side" aria-label="탐험 상태">
+      <section class="exploration-card legend-card">
+        <h2>칸 종류</h2>
+        <div class="exploration-legend">
+          <span><i class="tile-key start"></i>시작</span><span><i class="tile-key normal"></i>일반</span>
+          <span><i class="tile-key fortune"></i>행운</span><span><i class="tile-key danger"></i>불행</span>
+          <span><i class="tile-key goal"></i>목표</span>
+        </div>
+      </section>
+      <section class="exploration-card">
+        <h2>검문소 북문</h2>
+        <p class="demo-board-note">하연 C4 · 보초 E4 · 신호용 종 E3</p>
+      </section>
+    </aside>
+  </main>
+  <main id="battleApp" class="app app-view" aria-label="TRPG 전술 보드" hidden>
+    <section class="board-wrap" aria-label="배틀 맵">
+      <div class="board-frame"><div id="board" class="board" aria-label="10 x 8 전술 격자"></div></div>
+      <div class="unit-disposition-zones" aria-label="시체 보관과 유닛 제거">
+        <div class="unit-disposition-drop corpse-drop"><button type="button" disabled>시체칸 0</button><small>사망한 유닛과 전리품이 표시됩니다.</small></div>
+        <div class="unit-disposition-drop removal-drop"><button type="button" disabled>제거칸 0</button><small>보드에서 제거한 유닛이 표시됩니다.</small></div>
+      </div>
+    </section>
+    <section class="control-bar" aria-label="전투보드 유닛">
+      <div class="demo-unit-tools">
+        <button id="pick-hayeon" type="button" aria-pressed="true">하연</button>
+        <button id="pick-guard" type="button" aria-pressed="false">보초</button>
+      </div>
+      <div class="log" role="status"><span aria-hidden="true">⚔</span><p id="battleLog"></p></div>
+    </section>
+  </main>
+</body>
+</html>

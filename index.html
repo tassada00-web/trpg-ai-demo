@@ -3,182 +3,232 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="TRPG RPG Core의 AI 게임 마스터가 입력을 받아 자료를 고르고, 상태 변경을 제안하는 과정을 체험합니다.">
-  <meta name="theme-color" content="#f4f7f5">
-  <title>TRPG RPG Core · AI GM 견본</title>
+  <meta name="description" content="TRPG RPG Core의 원본 화면에서 AI 서술과 상태 변경을 따라가는 공개 견본입니다.">
+  <title>하연 이야기 · TRPG 견본</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css">
-  <script src="./demo.js" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=2">
+  <link rel="stylesheet" href="./demo.css?v=2">
+  <script src="./demo.js?v=2" defer></script>
 </head>
 <body>
-  <div class="app-shell">
+  <main class="app-shell">
     <header class="topbar">
       <div class="brand-lockup">
-        <span class="brand-mark" aria-hidden="true">TR</span>
-        <strong>TRPG RPG Core</strong>
+        <span class="brand-mark" aria-hidden="true">연</span>
+        <div><p class="eyebrow">Turn Based RPG Core</p><h1>하연 이야기</h1></div>
       </div>
-      <a class="source-link" href="https://github.com/tassada00-web/trpg-ai-demo">GitHub 저장소</a>
+      <nav class="main-mode-switcher" aria-label="메인 화면 전환">
+        <button class="mode-button is-active" type="button" data-mode="story" aria-pressed="true">스토리</button>
+        <button class="mode-button" type="button" data-mode="explore" aria-pressed="false">탐험보드</button>
+        <button class="mode-button" type="button" data-mode="combat" aria-pressed="false">전투보드</button>
+        <button class="mode-button" type="button" data-mode="profile" aria-pressed="false">상태창</button>
+      </nav>
+      <div class="top-actions">
+        <details class="save-tools">
+          <summary>공개 견본</summary>
+          <div class="save-tools-panel">
+            <p>샘플 캐릭터와 미리 작성된 응답으로 AI GM의 한 턴을 재현합니다.</p>
+            <a href="https://github.com/tassada00-web/trpg-ai-demo">GitHub 저장소</a>
+          </div>
+        </details>
+        <button class="ghost-button" id="reset" type="button">초기화</button>
+      </div>
     </header>
+    <noscript><p>예시 턴을 재생하려면 브라우저에서 JavaScript를 켜주세요.</p></noscript>
 
-    <main>
-      <section class="intro" aria-labelledby="page-title">
-        <div>
-          <h1 id="page-title">AI 게임 마스터 견본</h1>
-          <p>예시 턴을 따라가며 AI에 어떤 자료가 전달되고, 제안된 변경이 게임에 어떻게 반영되는지 확인하세요.</p>
-        </div>
-        <div class="intro-scene">
-          <span>예시 시나리오</span>
-          <strong>안개 속 검문소</strong>
-          <p>준비된 응답으로 시연합니다.</p>
-        </div>
-      </section>
-
-      <noscript><p class="noscript">예시 턴을 재생하려면 브라우저에서 JavaScript를 켜주세요.</p></noscript>
-      <section class="workbench" aria-label="TRPG 견본">
-        <div class="toolbar">
-          <nav class="main-mode-switcher" aria-label="견본 화면">
-            <button type="button" data-view="story" aria-pressed="true" aria-controls="story">스토리</button>
-            <button type="button" data-view="explore" aria-pressed="false" aria-controls="explore">탐험보드</button>
-            <button type="button" data-view="combat" aria-pressed="false" aria-controls="combat">전투보드</button>
-            <button type="button" data-view="profile" aria-pressed="false" aria-controls="profile">상태창</button>
-          </nav>
-          <button type="button" class="ghost-button" id="reset" disabled>처음부터</button>
-        </div>
-
-        <div class="layout-grid">
-          <aside class="party-panel" aria-label="캐릭터와 진행 기록">
-            <section class="panel hero-card" aria-labelledby="hero-name">
-              <div class="hero-body">
-                <div class="hero-ident">
-                  <span class="hero-sigil" aria-hidden="true">연</span>
-                  <div><h2 id="hero-name">하연</h2><p>플레이어 · 정찰병</p></div>
-                </div>
-                <div class="resource-stack">
-                  <div class="resource-line">
-                    <label for="hp-meter">HP <strong data-hp>18 / 20</strong></label>
-                    <meter id="hp-meter" min="0" max="20" value="18">18 / 20</meter>
-                  </div>
-                  <div class="resource-line">
-                    <label for="sp-meter">SP <strong>7 / 10</strong></label>
-                    <meter id="sp-meter" min="0" max="10" value="7">7 / 10</meter>
-                  </div>
-                </div>
+    <section class="layout-grid">
+      <aside class="party-panel" aria-label="파티">
+        <section class="hero-card" id="heroCard">
+          <div class="hero-image"><img src="./hayeon.jpg" alt="샘플 캐릭터 하연의 초상화" width="640" height="640"></div>
+          <div class="hero-body">
+            <div class="title-lockup">
+              <span class="sigil" aria-hidden="true">연</span>
+              <div><p class="eyebrow">정찰병</p><h2>하연</h2><p class="small-muted">신중함</p></div>
+            </div>
+            <div class="resource-stack">
+              <div class="resource-line" id="hero-health" style="--meter:90%;--tone:#b83f51">
+                <div class="resource-top"><span>체력</span><strong data-hp>18 / 20</strong></div>
+                <div class="meter" aria-hidden="true"><span></span></div>
               </div>
+              <div class="resource-line" style="--meter:35%;--tone:#368362">
+                <div class="resource-top"><span>스테미나</span><strong>7 / 20</strong></div>
+                <div class="meter" aria-hidden="true"><span></span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="party-slots" aria-labelledby="party-title">
+          <div class="panel-heading"><div><p class="section-kicker">Party</p><h2 id="party-title">파티 슬롯</h2></div></div>
+          <div class="party-slot-list" data-party-slots></div>
+        </section>
+        <section class="log-panel" aria-labelledby="log-title">
+          <div class="panel-heading"><div><p class="section-kicker">Log</p><h2 id="log-title">진행 기록</h2></div></div>
+          <div class="log-list" id="logList"><p class="log-entry">검문소 북문에 도착했다.</p></div>
+        </section>
+      </aside>
+
+      <section class="play-panel uses-game-system is-story-mode" aria-label="탐험과 전투">
+        <section class="board-zone board-zone-embedded is-story-board">
+          <div class="board-head">
+            <div><p class="section-kicker">Status</p><h2>메인 캐릭터 목록</h2></div>
+            <div class="board-meta"><span>1명</span></div>
+          </div>
+          <div class="embedded-game-frame" hidden>
+            <iframe id="gameSystemFrame" title="탐험·전투 보드"></iframe>
+          </div>
+
+          <div class="status-main-board" id="statusMainBoard" hidden>
+            <section class="status-board-intro">
+              <div><p class="section-kicker">Main Characters</p><h2>메인 캐릭터</h2></div>
+              <p>공개 견본의 플레이어 캐릭터입니다.</p>
             </section>
-            <section class="panel log-panel" aria-labelledby="log-title">
-              <h2 id="log-title">진행 기록</h2>
-              <ul id="log"><li>검문소 북문에 도착했다.</li></ul>
-            </section>
-          </aside>
-
-          <div class="play-panel">
-            <section id="story" class="panel" aria-labelledby="story-title">
-              <header class="panel-head">
-                <h2 id="story-title">이야기 서술</h2>
-                <span class="scene-tag">19:40 · 북문</span>
-              </header>
-              <div class="narrator-messages">
-                <article class="narrator-message">
-                  <h3>현재 장면</h3>
-                  <p>안개가 검문소 북문을 덮었다. 보초가 등불을 든 채 길을 막고 있고, 문 옆에는 예전에 쓰던 종이 줄에 매달려 있다.</p>
-                </article>
-                <article class="narrator-message user" id="player-message" hidden>
-                  <h3>하연</h3>
-                  <p data-action-text></p>
-                </article>
-                <article class="narrator-message" id="gm-message" hidden>
-                  <h3>AI 게임 마스터 <span>예시 응답</span></h3>
-                  <p>종이 세 번 울리자 보초가 등불을 돌리고 빗장을 푼다. 열린 샛문으로 몸을 밀어 넣는 순간, 휘어진 쇠고리가 팔을 스친다. 하연은 문 안쪽 그늘에 이르러 소매 아래 번지는 피를 발견한다.</p>
-                </article>
-              </div>
-              <div class="story-action" id="input-area">
-                <div id="sample-action">
-                  <p class="field-label">예시 행동</p>
-                  <p data-action-text>지난번 들은 신호대로 종을 세 번 울리고, 보초가 길을 열면 안쪽으로 들어간다.</p>
-                </div>
-                <button type="button" class="solid-button" id="submit-action" aria-describedby="sample-action">예시 행동 보내기</button>
-              </div>
-              <div class="story-action" id="request-area" hidden>
-                <p>선택한 자료를 확인하고 AI의 예시 응답을 열어보세요.</p>
-                <button type="button" class="solid-button" id="show-reply">AI 서술 보기</button>
-              </div>
-              <div class="proposal" id="proposal" hidden>
-                <div>
-                  <p class="field-label" id="proposal-label">상태 변경 제안 · 승인 대기</p>
-                  <h3>하연 HP <span>18 → 15</span></h3>
-                  <p id="proposal-note">쇠고리에 긁혀 HP 3 감소</p>
-                </div>
-                <div class="proposal-actions" id="proposal-actions">
-                  <button type="button" class="ghost-button" id="reject">거절</button>
-                  <button type="button" class="solid-button" id="approve">승인 및 적용</button>
-                </div>
-              </div>
-            </section>
-
-            <section id="explore" class="panel" aria-labelledby="explore-title" hidden>
-              <header class="panel-head"><h2 id="explore-title">파티 탐험 보드</h2><span class="scene-tag">검문소 북문</span></header>
-              <div class="board-body">
-                <div class="board-map" data-board="explore" aria-hidden="true"></div>
-                <p class="board-caption">하연 C4 · 보초 E4 · 신호용 종 E3</p>
-                <p>이 예시 턴에는 탐험 참조가 켜져 있어 서버가 보드의 인물과 물체를 AI 요청에 포함합니다.</p>
-              </div>
-            </section>
-
-            <section id="combat" class="panel" aria-labelledby="combat-title" hidden>
-              <header class="panel-head"><h2 id="combat-title">전투 보드</h2><span class="scene-tag">유닛 상태</span></header>
-              <div class="board-body">
-                <div class="board-map" data-board="combat" aria-hidden="true"></div>
-                <p class="board-caption">하연 C4 · HP <strong data-hp>18 / 20</strong></p>
-                <p>하연의 HP가 바뀌면 전투보드의 유닛 정보에도 같은 값이 표시됩니다.</p>
-              </div>
-            </section>
-
-            <section id="profile" class="panel" aria-labelledby="profile-title" hidden>
-              <header class="panel-head"><h2 id="profile-title">캐릭터 상태창</h2><span class="scene-tag">하연</span></header>
-              <dl class="profile-list">
-                <div><dt>직업</dt><dd>정찰병</dd></div>
-                <div><dt>HP</dt><dd data-hp>18 / 20</dd></div>
-                <div><dt>SP</dt><dd>7 / 10</dd></div>
-                <div><dt>소지품</dt><dd>휴대용 등불, 붕대</dd></div>
-              </dl>
+            <section class="main-character-list">
+              <article class="main-character-card is-active">
+                <span class="main-character-image"><img src="./hayeon.jpg" alt="" width="640" height="640"></span>
+                <span class="main-character-body"><span class="tiny-label">정찰병</span><strong>하연</strong><small>신중함</small>
+                  <span class="main-character-stats"><b>HP <span data-hp>18 / 20</span></b><b>SP 7 / 20</b><b>파티 1/3</b></span>
+                </span>
+              </article>
             </section>
           </div>
 
-          <aside class="panel sheet-panel" aria-labelledby="flow-title">
-            <header class="panel-head"><h2 id="flow-title">AI 처리 흐름</h2></header>
-            <ol class="flow-list">
-              <li data-step aria-current="step"><strong>행동 입력</strong><span>플레이어가 행동이나 대사를 보냅니다.</span></li>
-              <li data-step><strong>자료 선택</strong><span>현재 상태와 관련 설정·기억을 모읍니다.</span></li>
-              <li data-step><strong>AI 서술</strong><span>받은 자료로 장면을 서술하고 변경을 제안합니다.</span></li>
-              <li data-step><strong>승인·반영</strong><span>사용자가 승인하면 게임 상태에 적용합니다.</span></li>
-            </ol>
-            <section class="context" aria-labelledby="context-title">
-              <h3 id="context-title">이번 요청에 전달한 자료</h3>
-              <p id="context-empty">예시 행동을 보내면 이곳에서 자료를 확인할 수 있습니다.</p>
-              <div id="context-data" hidden>
-                <details open>
-                  <summary>캐릭터 상태</summary>
-                  <p>하연 · 정찰병 · 턴 시작 시 HP 18 / 20, SP 7 / 10</p>
-                </details>
-                <details open>
-                  <summary>탐험보드</summary>
-                  <p>북문에서 하연은 C4, 보초는 E4에 있다. 문 옆 E3에는 종이 있다.</p>
-                </details>
-                <details>
-                  <summary>장소 설정</summary>
-                  <p>오래된 북문에는 낮은 샛문이 있다. 안쪽으로 휜 쇠고리가 통로에 걸쳐 있다.</p>
-                </details>
-                <details>
-                  <summary>과거 기억</summary>
-                  <p>이전 턴에서 안내인이 “종을 세 번 울리면 보초가 샛문을 열어줘”라고 알려줬다.</p>
-                </details>
+          <div class="story-main-board" id="storyMainBoard">
+            <section class="narrator-panel" aria-label="AI 게임 마스터">
+              <header class="narrator-head">
+                <div class="demo-narrator-title"><p class="section-kicker">AI Game Master</p><h2>이야기 서술</h2></div>
+                <div class="narrator-head-actions">
+                  <span class="ghost-button board-ai-toggle is-on demo-reference">탐험 참조 ON</span>
+                  <span class="ghost-button board-ai-toggle demo-reference">전투 참조 OFF</span>
+                  <button class="ghost-button story-scene-open" type="button" data-info="scene">시간·장소 <span>19:40 · 북문</span></button>
+                  <button class="ghost-button story-user-note-open" type="button" data-info="note">유저 노트 <span>ON</span></button>
+                  <button class="ghost-button story-memory-open" type="button" data-info="memory">요약 메모리 <span>1</span></button>
+                  <button class="ghost-button" type="button" data-info="ledger">인물·사건 1/1</button>
+                  <button class="ghost-button" type="button" data-info="quest">퀘스트 0</button>
+                  <button class="ghost-button" type="button" data-info="event">GM 이벤트</button>
+                  <span class="narrator-status is-ready">견본 모드</span>
+                </div>
+              </header>
+
+              <details class="narrator-settings">
+                <summary>모델 연결 설정</summary>
+                <p class="demo-settings-copy">운영 화면에서 모델 연결을 설정합니다. 이 견본은 미리 작성된 응답을 사용합니다.</p>
+              </details>
+
+              <div class="narrator-messages" id="narratorMessages">
+                <article class="narrator-message assistant">
+                  <header class="narrator-message-head"><small>현재 장면</small></header>
+                  <p class="narrator-message-body">안개가 검문소 북문을 덮었다. 보초가 등불을 든 채 길을 막고 있고, 문 옆에는 예전에 쓰던 종이 줄에 매달려 있다.</p>
+                </article>
+                <article class="narrator-message user" id="player-message" hidden>
+                  <header class="narrator-message-head"><small>하연</small></header>
+                  <p class="narrator-message-body" id="player-action"></p>
+                </article>
+                <article class="narrator-message assistant" id="gm-message" hidden>
+                  <header class="narrator-message-head"><small>AI 게임 마스터 · 예시 응답</small></header>
+                  <p class="narrator-message-body" id="gm-text"></p>
+                </article>
+                <p class="story-commit-notice" id="result" hidden></p>
+              </div>
+
+              <details class="story-loot-panel">
+                <summary>전리품 확인·획득</summary>
+                <p>이 장면에서 획득할 수 있는 전리품이 없습니다.</p>
+              </details>
+
+              <section class="state-proposals" id="stateProposals" hidden aria-labelledby="proposal-title">
+                <section class="proposal-group">
+                  <div class="state-proposals-head"><h3 id="proposal-title">게임·전투보드 변경 제안</h3><span>1건</span></div>
+                  <ul><li id="proposal-text"></li></ul>
+                  <div class="state-proposal-actions">
+                    <button class="ghost-button" type="button" id="reject">거절</button>
+                    <button class="solid-button" type="button" id="approve">적용</button>
+                  </div>
+                </section>
+              </section>
+
+              <div class="narrator-context demo-context">
+                <p id="flow-status">행동을 보내면 설정·도감과 현재 상태를 어떻게 참고하는지 볼 수 있습니다.</p>
+                <button id="context-button" class="mini-button" type="button" hidden>이번 요청 자료</button>
+                <button id="show-reply" class="solid-button" type="button" hidden>AI 서술 보기</button>
+              </div>
+
+              <form class="narrator-form" id="narratorForm">
+                <label class="sr-only" for="narratorInput">행동 입력</label>
+                <textarea id="narratorInput" rows="3" readonly aria-describedby="demo-input-hint">지난번 들은 신호대로 종을 세 번 울리고, 보초가 길을 열면 안쪽으로 들어간다.</textarea>
+                <button class="solid-button" id="narratorSend" type="submit">행동 전송</button>
+                <p class="demo-input-hint" id="demo-input-hint">이야기는 검문소의 예시 행동과 응답으로 진행됩니다.</p>
+              </form>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <aside class="sheet-panel" aria-label="상태창">
+        <nav class="sheet-tabs" aria-label="상태창 탭">
+          <button class="sheet-tab is-active" type="button" data-tab="overview" aria-pressed="true">상태</button>
+          <button class="sheet-tab" type="button" data-tab="equipment" aria-pressed="false">장비</button>
+          <button class="sheet-tab" type="button" data-tab="skills" aria-pressed="false">스킬</button>
+          <button class="sheet-tab" type="button" data-tab="bag" aria-pressed="false">가방</button>
+          <button class="sheet-tab" type="button" data-tab="party" aria-pressed="false">파티</button>
+        </nav>
+        <div class="sheet-content">
+          <div data-sheet="overview">
+            <section class="summary-grid">
+              <article class="metric"><span>체력</span><strong data-hp>18 / 20</strong></article>
+              <article class="metric"><span>스테미나</span><strong>7 / 20</strong></article>
+              <article class="metric"><span>주무기</span><strong>3</strong></article>
+              <article class="metric"><span>방어력</span><strong>2</strong></article>
+            </section>
+            <section class="unit-profile-editor playable-profile-editor demo-sheet-section">
+              <div class="card-head">
+                <div><span class="tiny-label">Playable Character</span><h3>성향·말투 설정</h3></div>
+                <div class="unit-profile-head-actions">
+                  <button class="mini-button" type="button" disabled>프로필 엑셀 가져오기</button>
+                  <button class="mini-button unit-profile-toggle" id="profile-toggle" type="button" aria-expanded="true" aria-controls="profile-body">접기</button>
+                </div>
+              </div>
+              <div class="unit-profile-body" id="profile-body">
+                <div class="unit-profile-grid">
+                  <label>성향<textarea rows="2" readonly>신중함</textarea></label>
+                  <label>말투<textarea rows="2" readonly>낮고 간결하게 말한다.</textarea></label>
+                </div>
               </div>
             </section>
-          </aside>
+            <section class="detail-card demo-sheet-section">
+              <h2>상태 조정</h2>
+              <div class="resource-editor">
+                <label>받은 피해<input id="damage-counter" type="number" value="2" readonly></label>
+                <label>SP 소모<input type="number" value="13" readonly></label>
+                <button class="mini-button" type="button" disabled>회복</button>
+              </div>
+            </section>
+            <section class="stat-table demo-sheet-section" id="stat-table" aria-label="능력치"></section>
+          </div>
+          <section data-sheet="equipment" class="gear-grid" hidden>
+            <article class="gear-card"><p class="tiny-label">주무기</p><h3>정찰용 단검</h3><p>데미지 +3</p></article>
+            <article class="gear-card"><p class="tiny-label">방어구</p><h3>여행자의 외투</h3><p>방어력 +2</p></article>
+          </section>
+          <section data-sheet="skills" class="skill-grid" hidden>
+            <article class="skill-card"><p class="tiny-label">Active</p><h3>기척 감추기</h3><p>발걸음을 죽여 주변의 시선을 피한다.</p></article>
+            <article class="skill-card"><p class="tiny-label">Passive</p><h3>길잡이</h3><p>갈림길에서 지나온 경로를 기억한다.</p></article>
+          </section>
+          <section data-sheet="bag" class="bag-grid" hidden>
+            <article class="detail-card"><h3>휴대용 등불</h3><p>1개</p></article>
+            <article class="detail-card"><h3>붕대</h3><p>2개</p></article>
+          </section>
+          <section data-sheet="party" class="party-slot-list" data-party-slots hidden></section>
         </div>
-      </section>
-      <p class="sr-only" id="announcement" role="status"></p>
-    </main>
-  </div>
+      </aside>
+    </section>
+
+    <dialog class="demo-dialog" id="info-dialog" aria-labelledby="info-title">
+      <div class="card-head">
+        <h2 id="info-title"></h2>
+        <form method="dialog"><button class="ghost-button" type="submit">닫기</button></form>
+      </div>
+      <div class="demo-info-body" id="info-body"></div>
+    </dialog>
+    <p class="sr-only" id="announcement" role="status"></p>
+  </main>
 </body>
 </html>
